@@ -5,16 +5,15 @@ import { Document } from "mongoose";
 export class Load extends Document{
 
     @Prop()
+    load_id: string;
+
+    @Prop()
     equipment: string;
 
-    @Prop({
-        required: true
-    })
+    @Prop()
     origin: string;
 
-    @Prop({
-        required: true
-    })
+    @Prop()
     destination: string;
 
     @Prop()
@@ -22,6 +21,15 @@ export class Load extends Document{
 
     @Prop()
     delivery_date: string;
+
+    @Prop()
+    customer: string;
+
+    @Prop()
+    phone: string;
+
+    @Prop()
+    rate: string;
 
 }
 
