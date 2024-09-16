@@ -18,4 +18,13 @@ export class LoadsController {
     return this.loadsService.findAll();
   }
 
+  @Get('testing')
+  testing() {
+    return {
+      ok: true,
+      message: 'Hasta la vista baby'
+    }
+  }
+
+
 }
