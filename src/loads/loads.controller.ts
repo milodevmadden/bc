@@ -1,4 +1,6 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UploadedFile, UseInterceptors } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+
 import { LoadsService } from './loads.service';
 import { CreateLoadDto } from './dto/create-load.dto';
 import { UpdateLoadDto } from './dto/update-load.dto';
@@ -22,6 +24,13 @@ export class LoadsController {
   test(@Body() body) {
     const {data} = body
     return this.loadsService.testing(data)
+  }
+
+  @Post('excel')
+  @UseInterceptors(FileInterceptor('file'))
+  receiveExcel(@UploadedFile() file: any) {
+    const result = this.loadsService.processExcel(file);
+    return result;
   }
 
 
