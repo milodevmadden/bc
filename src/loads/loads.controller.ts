@@ -18,12 +18,10 @@ export class LoadsController {
     return this.loadsService.findAll();
   }
 
-  @Get('testing')
-  testing() {
-    return {
-      ok: true,
-      message: 'Hasta la vista baby'
-    }
+  @Post('testing')
+  test(@Body() body) {
+    const {data} = body
+    return this.loadsService.testing(data)
   }
 
 

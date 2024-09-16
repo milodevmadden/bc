@@ -25,4 +25,12 @@ export class LoadsService {
     return `This action returns all loads`;
   }
 
+  testing(data) {
+    return {
+      ok: true,
+      message: 'Hasta la vista baby', 
+      data
+    }
+  }
+
 }
