@@ -20,6 +20,8 @@ export class LoadsController {
     return "Hello guys"
   }
 
+  // comment
+
   @Get()
   findAll() {
     return this.loadsService.findAll();
