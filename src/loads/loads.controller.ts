@@ -15,6 +15,11 @@ export class LoadsController {
     return this.loadsService.create(data);
   }
 
+  @Get('hi')
+  hi(){
+    return "Hello guys"
+  }
+
   @Get()
   findAll() {
     return this.loadsService.findAll();
