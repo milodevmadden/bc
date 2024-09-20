@@ -62,6 +62,7 @@ export class LoadsService {
 
   async testing(data) {
     // Ajuste para que OpenAI funcione con un objeto en lugar de un array directamente
+    /*
     const completion = await this.client.beta.chat.completions.parse({
       model: 'gpt-4o-mini',
       temperature: 0,
@@ -91,10 +92,12 @@ export class LoadsService {
       savedLoads.push(savedLoad);
     }
 
+    */
     return {
       ok: true,
       message: 'Hasta la vista baby',
-      savedLoads
+      //savedLoads
+      data
     };
   }
 
