@@ -38,7 +38,7 @@ export class LoadsService {
   }
 
   async create(createLoadDto: CreateLoadDto) {
-    const { equipment, origin, destination, pickup_date, delivery_date, load_id, customer, phone, rate, sender_email, sender } =
+    const { equipment, origin, destination, pickup_date, delivery_date, load_id, customer, phone, rate } =
       createLoadDto;
     const load = await this.loadModel.create({
       equipment,
@@ -49,9 +49,7 @@ export class LoadsService {
       load_id, 
       customer, 
       phone, 
-      rate,
-      sender_email,
-      sender
+      rate
     });
     return load;
   }
