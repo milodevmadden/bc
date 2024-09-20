@@ -4,6 +4,8 @@ import { UpdateLoadDto } from './dto/update-load.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { Load } from './entities/load.entity';
 import { envs } from 'src/config/envs';
+import { zodResponseFormat } from 'openai/helpers/zod';
+import { z } from 'zod';
 import OpenAI from 'openai';
 import { Model } from 'mongoose';
 import * as ExcelJS from 'exceljs';
@@ -11,18 +13,32 @@ import * as ExcelJS from 'exceljs';
 @Injectable()
 export class LoadsService {
   private client: OpenAI;
+  private loadSchema;
 
   constructor(
     @InjectModel(Load.name)
-    private readonly loadModel: Model<Load>
+    private readonly loadModel: Model<Load>,
   ) {
     this.client = new OpenAI({
       apiKey: envs.openai_api_key,
     });
+
+    // Esquema para los campos de cada load
+    this.loadSchema = z.object({
+      equipment: z.string(),
+      origin: z.string(),
+      destination: z.string(),
+      pickup_date: z.string(),
+      delivery_date: z.string(),
+      load_id: z.string(),
+      customer: z.string(),
+      phone: z.string(),
+      rate: z.string(),
+    });
   }
 
   async create(createLoadDto: CreateLoadDto) {
-    const { equipment, origin, destination, pickup_date, delivery_date } =
+    const { equipment, origin, destination, pickup_date, delivery_date, load_id, customer, phone, rate, sender_email, sender } =
       createLoadDto;
     const load = await this.loadModel.create({
       equipment,
@@ -30,23 +46,55 @@ export class LoadsService {
       destination,
       pickup_date,
       delivery_date,
+      load_id, 
+      customer, 
+      phone, 
+      rate,
+      sender_email,
+      sender
     });
     return load;
   }
 
   findAll() {
-    return `This action returns all loads`;
+    return this.loadModel.find({});
   }
 
   async testing(data) {
+    // Ajuste para que OpenAI funcione con un objeto en lugar de un array directamente
+    const completion = await this.client.beta.chat.completions.parse({
+      model: 'gpt-4o-mini',
+      temperature: 0,
+      messages: [
+        {
+          role: 'system',
+          content:
+            'You are an assistant designed to extract specific load information from unstructured text. The user will provide a text containing details about one or more loads. Your task is to extract the data and return it as an array of objects, even if there is only one load. The objects should always contain the following fields: {equipment, origin, destination, pickup_date, delivery_date, load_id, customer, phone, rate}. If any field is missing, return an empty string for that field. The vocabulary in the text may vary (e.g., load_id can be referred to as shipment_id or similar), so interpret and return the correct field value. If the text contains multiple loads, return an array with each load as an object. Always maintain the structure: array of objects.',
+        },
+        {
+          role: 'user',
+          content: `Here is the text containing load information. Please extract and return an array of objects, each containing the fields {equipment, origin, destination, pickup_date, delivery_date, load_id, customer, phone, rate}. If any field is missing, leave it as an empty string. Content: ${data}`,
+        },
+      ],
+      response_format: zodResponseFormat(
+        z.object({ loads: this.loadSchema.array() }), // Envolver el array en un objeto
+        'loads',
+      ),
+    });
 
-    const res = await this.extractLoadInfoFromText(data)
-    console.log(res)
+    const loads = completion.choices[0].message.parsed.loads;
+    console.log(loads);
+
+    const savedLoads = [];
+    for (const load of loads) {
+      const savedLoad = await this.create(load);
+      savedLoads.push(savedLoad);
+    }
 
     return {
       ok: true,
       message: 'Hasta la vista baby',
-      data,
+      savedLoads
     };
   }
 
@@ -75,76 +123,6 @@ export class LoadsService {
       ok: true,
       message: 'Excel file processed successfully',
       data: stringData,
-    };
-  }
-
-  /**
-   * Método para procesar el texto y extraer los campos de interés
-   * usando OpenAI function calling.
-   */
-  async extractLoadInfoFromText(text: string) {
-    const response = await this.client.chat.completions.create({
-      model: 'gpt-4-0613',
-      messages: [
-        {
-          role: 'system',
-          content:
-            'You are a system that extracts structured data from shipping information in any format. it could be just one load or many. In any case just return an array with objects it does not matter if is one or many',
-        },
-        {
-          role: 'user',
-          content: text,
-        },
-      ],
-      functions: [
-        {
-          name: 'extract_loads',
-          description: 'Extracts shipping data from text.',
-          parameters: {
-            type: 'object',
-            properties: {
-              equipment: { type: 'string' },
-              origin: { type: 'string' },
-              destination: { type: 'string' },
-              pickup_date: { type: 'string', format: 'date' },
-              delivery_date: { type: 'string', format: 'date' },
-              shipment_id: { type: 'string' },
-              price: { type: 'string' },
-            },
-            required: [
-              'equipment',
-              'origin',
-              'destination',
-              'pickup_date',
-              'delivery_date',
-              'shipment_id',
-              'price',
-            ],
-          },
-        },
-      ],
-      function_call: { name: 'extract_loads' },
-    });
-
-    const extractedData = response.choices[0]?.message?.function_call?.arguments;
-
-    if (extractedData) {
-      const parsedData = JSON.parse(extractedData);
-
-      console.log({extractedData})
-
-      // Guardar los datos en MongoDB
-      //const load = await this.loadModel.create(parsedData);
-
-      return {
-        ok: true,
-        message: 'Load information extracted and saved successfully',
-      };
-    }
-
-    return {
-      ok: false,
-      message: 'Failed to extract load information',
     };
   }
 }

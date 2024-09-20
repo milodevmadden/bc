@@ -31,6 +31,12 @@ export class Load extends Document{
     @Prop()
     rate: string;
 
+    @Prop()
+    sender_email: string;
+
+    @Prop()
+    sender: string;
+
 }
 
 export const LoadSchema = SchemaFactory.createForClass(Load)

@@ -29,7 +29,9 @@ export class LoadsController {
 
   @Post('testing')
   test(@Body() body) {
-    const {data} = body
+    const {data, email, sender} = body
+    data.sender_email = email;
+    data.sender = sender;
     return this.loadsService.testing(data)
   }
 

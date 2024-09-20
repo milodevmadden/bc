@@ -39,5 +39,11 @@ export class CreateLoadDto {
     @IsString()
     rate?: string;
 
+    @IsOptional()
+    @IsString()
+    sender_email?: string;
 
+    @IsOptional()
+    @IsString()
+    sender?: string;
 }
