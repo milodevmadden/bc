@@ -1,4 +1,4 @@
-import { IsOptional, IsString } from "class-validator";
+import { IsBoolean, IsOptional, IsString } from "class-validator";
 
 
 export class CreateLoadDto {
@@ -38,5 +38,8 @@ export class CreateLoadDto {
     @IsOptional()
     @IsString()
     rate?: string;
+
+    @IsBoolean()
+    old: boolean
 
 }
