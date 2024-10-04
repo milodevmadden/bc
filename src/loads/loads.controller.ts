@@ -27,10 +27,15 @@ export class LoadsController {
     return this.loadsService.findAll();
   }
 
+  @Get(':id')
+  getOne(@Param('id') id){
+    return this.loadsService.findOne(id)
+  }
+
   @Post('testing')
   test(@Body() body) {
-    const {data} = body
-    return this.loadsService.testing(data)
+    const {data, client} = body
+    return this.loadsService.testing(data, client)
   }
 
   @Post('excel')
