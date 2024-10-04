@@ -34,6 +34,7 @@ export class LoadsService {
       customer: z.string(),
       phone: z.string(),
       rate: z.string(),
+      old: z.boolean()
     });
   }
 
@@ -54,24 +55,33 @@ export class LoadsService {
     return load;
   }
 
-  findAll() {
-    return this.loadModel.find({});
+  async findAll() {
+    const loads = await this.loadModel.find({});
+    return loads
   }
 
-  async testing(data) {
+  async findOne(id) {
+    const load = await this.loadModel.findById(id)
+    return load
+  }
+
+  
+
+  async testing(data, client) {
     // Ajuste para que OpenAI funcione con un objeto en lugar de un array directamente
     const completion = await this.client.beta.chat.completions.parse({
       model: 'gpt-4o-mini',
       temperature: 0,
+      max_tokens: 1000,
       messages: [
         {
           role: 'system',
           content:
-            'You are an assistant designed to extract specific load information from unstructured text. The user will provide a text containing details about one or more loads. Your task is to extract the data and return it as an array of objects, even if there is only one load. The objects should always contain the following fields: {equipment, origin, destination, pickup_date, delivery_date, load_id, customer, phone, rate}. If any field is missing, return an empty string for that field. The vocabulary in the text may vary (e.g., load_id can be referred to as shipment_id or similar), so interpret and return the correct field value. If the text contains multiple loads, return an array with each load as an object. Always maintain the structure: array of objects.',
+            `You are an assistant designed to extract specific load information from unstructured text. The user will provide a text containing details about one or more loads. Your task is to extract the data and return it as an array of objects, even if there is only one load. The objects should always contain the following fields: {equipment, origin, destination, pickup_date, delivery_date, load_id, customer, phone, rate, old}. Old is always set to false. If origin or destination is missing, ignore the object and do not add it to the array. If customer is missing set ${client} as customer. If any other field is missing, return an empty string for that field. The vocabulary in the text may vary (e.g., load_id can be referred to as shipment_id or similar), so interpret and return the correct field value. If the text contains multiple loads, return an array with each load as an object. Always maintain the structure: array of objects.`,
         },
         {
           role: 'user',
-          content: `Here is the text containing load information. Please extract and return an array of objects, each containing the fields {equipment, origin, destination, pickup_date, delivery_date, load_id, customer, phone, rate}. If any field is missing, leave it as an empty string. Content: ${data}`,
+          content: `Here is the text containing load information. Please extract and return an array of objects, each containing the fields {equipment, origin, destination, pickup_date, delivery_date, load_id, customer, phone, rate}. If origin or destination is missing, ignore the object and do not add it to the array. If customer is missing set ${client} as customer. If any other field is missing, leave it as an empty string. Always set old: false when creating the object. Content: ${data}`,
         },
       ],
       response_format: zodResponseFormat(
@@ -91,7 +101,8 @@ export class LoadsService {
 
     return {
       ok: true,
-      message: 'Hasta la vista baby',
+      message: 'Working',
+      client,
       savedLoads
     };
   }
