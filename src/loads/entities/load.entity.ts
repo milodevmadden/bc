@@ -31,6 +31,11 @@ export class Load extends Document{
     @Prop()
     rate: string;
 
+    @Prop({
+        default: false
+    })
+    old: boolean;
+
 }
 
 export const LoadSchema = SchemaFactory.createForClass(Load)
